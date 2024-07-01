@@ -4,8 +4,7 @@ const { protect } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 const router = express.Router();
 
-router.post('/', protect , createTeam);
-router.put('/:id', protect, upload.single('photo'), editTeam);
+router.post('/', protect , upload.single('photo') ,createTeam);
 router.post('/join', protect, joinTeam);
 router.get('/', protect, getTeams);
 

@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Team = require('../models/Team');
+
 const asyncHandler = require('express-async-handler');
 const { validationResult } = require('express-validator');
 
@@ -54,3 +56,34 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
+
+// Function to leave a team
+exports.leaveTeam = asyncHandler(async (req, res) => {
+  try {
+    const { team_id } = req.body;
+    const userId = req.user._id;
+
+    const team = await Team.findOne({ team_id });
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+
+    // Remove user from team members if they are a member
+    if (team.members.includes(userId)) {
+      team.members.pull(userId);
+      await team.save();
+
+      // Optionally, remove the team from the user's teams list
+      await User.findByIdAndUpdate(userId, { $pull: { teams: team_id } });
+
+      res.status(200).json({ message: 'Left team successfully', team });
+    } else {
+      res.status(400).json({ message: 'User is not a member of the team' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});

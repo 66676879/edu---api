@@ -5,7 +5,7 @@ const teamSchema = mongoose.Schema(
     team_id: {
       type: String,
       required: true,
-      unique: true ,
+      unique: true,
       default: () => new mongoose.Types.ObjectId().toString(),
     },
     name: {

@@ -53,8 +53,9 @@ exports.login = async (req, res) => {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       res.json({
-        _id: user._id,
+        //_id: user._id,
         fullName: user.fullName,
+        
         email: user.email,
         gender: user.gender,
         dob: user.dob,
