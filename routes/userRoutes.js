@@ -4,8 +4,12 @@ const { protect } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware');
 const router = express.Router();
 
-router.put('/profile', protect, upload.single('photo'), editProfile);
-router.get('/profile', protect, getProfile);
+
+// use user id 
+router.put('/profile', upload.single('photo'), editProfile);
+router.get('/profile',  getProfile);
+
+
 router.post('/leave-team', protect, leaveTeam);
 
 module.exports = router;

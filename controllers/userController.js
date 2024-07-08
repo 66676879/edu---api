@@ -7,13 +7,20 @@ const { validationResult } = require('express-validator');
 // Edit user profile
 exports.editProfile = asyncHandler(async (req, res) => {
   try {
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
+    
+    const userId = req.body.userId; // Get the user ID from the request body
+ 
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
 
-    const user = await User.findById(req.user._id);
-    //console.log(`${user}`)
+    const user = await User.findById(userId);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -45,7 +52,13 @@ exports.editProfile = asyncHandler(async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
+    const userId = req.body.userId; // Get the user ID from the request body
+    console.log(`${userId}`)
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    const user = await User.findById(userId).select('-password');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -56,8 +69,6 @@ exports.getProfile = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 
 // Function to leave a team
