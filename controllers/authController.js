@@ -6,22 +6,29 @@ const transporter = require('../config/nodemailer');
 const { generateToken2 } = require('../utils/tokenGenerator');
 const { signupTemplate, resetPasswordTemplate } = require('../utils/emailTemplates');
 
+
 exports.signup = async (req, res) => {
   const { fullName, email, password, gender, dob } = req.body;
 
   try {
-    const userExists = await User.findOne({ email });
+    let user = await User.findOne({ email });
 
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+    if (user) {
+      if (!user.isVerified) {
+        await User.deleteOne({ _id: user._id });
+        return res.status(400).json({ message: 'Invalid email' });
+      } else {
+        return res.status(400).json({ message: 'User already exists' });
+      }
     }
 
-    const user = await User.create({
+    user = await User.create({
       fullName,
       email,
       password,
       gender,
       dob,
+      isVerified: false,  // add this field to track verification status
     });
 
     const token = generateToken2();
@@ -38,12 +45,13 @@ exports.signup = async (req, res) => {
     transporter.sendMail(mailOptions);
     res.status(200).json({ message: 'Signup successful, verification email sent' });
 
-
   } catch (error) {
     console.error(error); // Log the error for debugging purposes
     res.status(500).json({ message: 'Internal Server Error' }); 
   }
 };
+
+
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -51,19 +59,24 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
 
-    if (user && (await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    if (!user.isVerified) {
+      await User.deleteOne({ _id: user._id });
+      return res.status(401).json({ message: 'Invalid email' });
+    }
+
+    if (await bcrypt.compare(password, user.password)) {
       res.json({
-        // new edit
         _id: user._id,
         fullName: user.fullName,
-        
         email: user.email,
         gender: user.gender,
         dob: user.dob,
         token: generateToken(user._id),
       });
-
-      //console.log(res.getHeaders())
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }
@@ -71,6 +84,11 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
+
+
 
 exports.verifyEmail = async (req, res) => {
   const { token } = req.params;
@@ -145,4 +163,78 @@ exports.setNewPassword = async (req, res) => {
     });
     */
 
+
+    /*
+
+exports.signup = async (req, res) => {
+  const { fullName, email, password, gender, dob } = req.body;
+
+  try {
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const user = await User.create({
+      fullName,
+      email,
+      password,
+      gender,
+      dob,
+    });
+
+    const token = generateToken2();
+    user.emailToken = token;
+    await user.save();
+
+    const mailOptions = {
+      from: `EDU Verse Team <${process.env.MAIL_USER}>`,
+      to: user.email,
+      subject: 'Verify Your EDU Verse Desktop App Account',
+      html: signupTemplate(user.fullName, token),
+    };
+
+    transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Signup successful, verification email sent' });
+
+
+  } catch (error) {
+    console.error(error); // Log the error for debugging purposes
+    res.status(500).json({ message: 'Internal Server Error' }); 
+  }
+};
+
+*/
+
+
+
+/*
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        // new edit
+        _id: user._id,
+        fullName: user.fullName,
+        
+        email: user.email,
+        gender: user.gender,
+        dob: user.dob,
+        token: generateToken(user._id),
+      });
+
+      //console.log(res.getHeaders())
+    } else {
+      res.status(401).json({ message: 'Invalid email or password' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+*/
 

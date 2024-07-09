@@ -26,7 +26,7 @@ exports.editProfile = asyncHandler(async (req, res) => {
     }
 
     user.fullName = req.body.fullName || user.fullName;
-    user.email = req.body.email || user.email;
+    //user.email = req.body.email || user.email;
     user.password = req.body.password || user.password;
     user.dob = req.body.dob || user.dob;
     if (req.file) {
